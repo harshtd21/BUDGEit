@@ -1,0 +1,127 @@
+var App = App || {};
+
+App.creditCards = (function () {
+  var u = App.utils;
+
+  function render(container) {
+    Promise.all([App.db.getAllCreditCards(), App.db.getAllTransactions()]).then(function (r) {
+      var cards = r[0], txs = r[1];
+
+      container.innerHTML =
+        '<div class="section-header">Credit Cards</div>' +
+        '<div class="item-list">' +
+        (cards.length ? cards.map(function (c) { return rowHtml(c, txs); }).join("") : '<div class="empty-list">No credit cards yet.</div>') +
+        "</div>" +
+        '<button type="button" class="secondary-btn" id="add-card-btn">+ Add Credit Card</button>';
+
+      container.querySelectorAll("[data-id]").forEach(function (row) {
+        row.addEventListener("click", function () {
+          var card = cards.find(function (c) { return c.id === row.getAttribute("data-id"); });
+          if (card) openForm(card, container, txs);
+        });
+      });
+      container.querySelector("#add-card-btn").addEventListener("click", function () {
+        openForm(null, container, txs);
+      });
+    });
+  }
+
+  function rowHtml(c, txs) {
+    var s = App.derived.cardState(c, txs);
+    return (
+      '<div class="item-row" data-id="' + c.id + '">' +
+      '<div class="item-main">' +
+      '<div class="item-title">' + u.escapeHtml(c.bankName) + "</div>" +
+      '<div class="item-sub">Amount Payable: ' + u.formatCurrency(s.amountPayable) + "</div>" +
+      "</div>" +
+      '<div class="item-value">' + u.formatCurrency(s.outstandingBalance) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function openForm(existing, container, txs) {
+    var isEdit = !!existing;
+    var overlay = document.createElement("div");
+    overlay.className = "sheet-backdrop";
+    overlay.innerHTML =
+      '<div class="form-modal">' +
+      '<div class="form-header">' +
+      '<button type="button" class="form-cancel" data-action="close">Cancel</button>' +
+      "<h2>" + (isEdit ? "Edit Credit Card" : "Add Credit Card") + "</h2>" +
+      '<button type="button" class="form-save" data-action="save">Save</button>' +
+      "</div>" +
+      '<div class="form-body">' +
+      '<label class="field-label">Bank Name</label>' +
+      '<input type="text" class="field-input" id="c-bank" value="' + (existing ? u.escapeHtml(existing.bankName) : "") + '">' +
+      '<label class="field-label">Amount Payable</label>' +
+      '<input type="number" inputmode="decimal" step="0.01" class="field-input" id="c-payable" placeholder="0.00" value="' + (existing ? u.formatPlain(existing.startingAmountPayable) : "") + '">' +
+      '<p class="field-hint">Current bill due — rises with card spend, falls as you pay it off via Transfer.</p>' +
+      '<label class="field-label">Outstanding Balance</label>' +
+      '<input type="number" inputmode="decimal" step="0.01" class="field-input" id="c-outstanding" placeholder="0.00" value="' + (existing ? u.formatPlain(existing.startingOutstandingBalance) : "") + '">' +
+      '<p class="field-hint">Lifetime running total — only ever increases with card spend.</p>' +
+      (isEdit
+        ? '<p class="field-hint">Editing these corrects the starting point only — it does not remove the effect of transactions already linked to this card.</p>'
+        : "") +
+      (isEdit ? '<button type="button" class="delete-btn" data-action="delete">Delete Credit Card</button>' : "") +
+      '<p class="field-error" id="c-error"></p>' +
+      "</div>" +
+      "</div>";
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener("click", function (e) {
+      var action = e.target.getAttribute("data-action");
+      if (e.target === overlay || action === "close") {
+        overlay.remove();
+      } else if (action === "save") {
+        save();
+      } else if (action === "delete") {
+        if (App.derived.hasLinkedTransactions("creditCard", existing.id, txs)) {
+          alert("This card has linked transactions and can't be deleted.");
+          return;
+        }
+        if (confirm("Delete this credit card? This cannot be undone.")) {
+          App.db.deleteCreditCard(existing.id).then(function () {
+            overlay.remove();
+            render(container);
+          });
+        }
+      }
+    });
+
+    function save() {
+      var errorEl = overlay.querySelector("#c-error");
+      var bankName = overlay.querySelector("#c-bank").value.trim();
+      var payable = parseFloat(overlay.querySelector("#c-payable").value);
+      var outstanding = parseFloat(overlay.querySelector("#c-outstanding").value);
+
+      if (!bankName) {
+        errorEl.textContent = "Please enter a bank name.";
+        return;
+      }
+      if (isNaN(payable) || payable < 0) {
+        errorEl.textContent = "Please enter a valid amount payable.";
+        return;
+      }
+      if (isNaN(outstanding) || outstanding < 0) {
+        errorEl.textContent = "Please enter a valid outstanding balance.";
+        return;
+      }
+
+      var record = {
+        id: isEdit ? existing.id : u.uuid(),
+        bankName: bankName,
+        startingAmountPayable: u.round2(payable),
+        startingOutstandingBalance: u.round2(outstanding),
+        createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      var op = isEdit ? App.db.updateCreditCard(record) : App.db.addCreditCard(record);
+      op.then(function () {
+        overlay.remove();
+        render(container);
+      });
+    }
+  }
+
+  return { render: render };
+})();
