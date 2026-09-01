@@ -10,6 +10,7 @@ App.accounts = (function () {
       '<div id="section-bank-accounts" style="margin-top:28px;"></div>' +
       '<div id="section-loans" style="margin-top:28px;"></div>' +
       '<div id="section-credit-cards" style="margin-top:28px;"></div>' +
+      '<div id="section-about" style="margin-top:28px;"></div>' +
       '<div class="backup-section">' +
       "<h3>Backup</h3>" +
       '<button type="button" class="secondary-btn" id="export-btn">Export Data (JSON)</button>' +
@@ -21,6 +22,7 @@ App.accounts = (function () {
     App.bankAccounts.render(document.getElementById("section-bank-accounts"));
     App.loans.render(document.getElementById("section-loans"));
     App.creditCards.render(document.getElementById("section-credit-cards"));
+    App.about.render(document.getElementById("section-about"));
 
     root.querySelector("#export-btn").addEventListener("click", exportData);
     var importInput = root.querySelector("#import-file");
@@ -53,6 +55,9 @@ App.accounts = (function () {
       try {
         var data = JSON.parse(reader.result);
         App.db.importReplace(data).then(function () {
+          return App.db.getSettings();
+        }).then(function (settings) {
+          u.setCurrency((settings && settings.currency) || "INR");
           alert("Import complete.");
           render();
         });

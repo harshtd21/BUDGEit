@@ -34,7 +34,7 @@ App.bankAccounts = (function () {
     return (
       '<div class="item-row" data-id="' + a.id + '">' +
       '<div class="item-main">' +
-      '<div class="item-title">' + u.escapeHtml(a.bankName) + ' <span class="badge">' + u.escapeHtml(a.accountType) + "</span></div>" +
+      '<div class="item-title">' + u.escapeHtml(a.bankName) + ' <span class="badge ' + (a.accountType === "Savings" ? "badge-blue" : "badge-violet") + '">' + u.escapeHtml(a.accountType) + "</span></div>" +
       '<div class="item-sub">' + u.escapeHtml(u.maskAccountNumber(a.accountNumber)) + "</div>" +
       "</div>" +
       '<div class="item-value">' + u.formatCurrency(balance) + "</div>" +

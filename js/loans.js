@@ -54,12 +54,14 @@ App.loans = (function () {
     );
   }
 
+  var LOAN_BADGE_CLASS = { Home: "badge-teal", Vehicle: "badge-orange", Others: "badge-violet" };
+
   function loanRowHtml(l, txs) {
     var s = App.derived.loanState(l, txs);
     return (
       '<div class="item-row" data-loan-id="' + l.id + '">' +
       '<div class="item-main">' +
-      '<div class="item-title">' + u.escapeHtml(l.name) + ' <span class="badge">' + u.escapeHtml(l.category) + "</span></div>" +
+      '<div class="item-title">' + u.escapeHtml(l.name) + ' <span class="badge ' + (LOAN_BADGE_CLASS[l.category] || "") + '">' + u.escapeHtml(l.category) + "</span></div>" +
       '<div class="item-sub">' + u.formatCurrency(s.currentEMI) + "/mo · " + l.interestRate + "% · " + s.currentTenureMonths + " months left</div>" +
       "</div>" +
       '<div class="item-value">' + u.formatCurrency(s.currentPrincipal) + "</div>" +

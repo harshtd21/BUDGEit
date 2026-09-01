@@ -95,11 +95,25 @@ App.utils = (function () {
     return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
   }
 
-  var currencyFormatter = new Intl.NumberFormat(navigator.language || "en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  });
+  var currentCurrencyCode = "INR";
+  var currencyFormatter = buildCurrencyFormatter(currentCurrencyCode);
+
+  function buildCurrencyFormatter(code) {
+    return new Intl.NumberFormat(navigator.language || "en-IN", {
+      style: "currency",
+      currency: code,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  function setCurrency(code) {
+    currentCurrencyCode = code;
+    currencyFormatter = buildCurrencyFormatter(code);
+  }
+
+  function getCurrency() {
+    return currentCurrencyCode;
+  }
 
   function formatCurrency(n) {
     return currencyFormatter.format(n || 0);
@@ -147,6 +161,8 @@ App.utils = (function () {
     dayLabel: dayLabel,
     groupHeaderLabel: groupHeaderLabel,
     formatCurrency: formatCurrency,
+    setCurrency: setCurrency,
+    getCurrency: getCurrency,
     formatPlain: formatPlain,
     escapeHtml: escapeHtml,
     calculateEMI: calculateEMI,

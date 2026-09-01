@@ -18,7 +18,10 @@ App.app = (function () {
       navigator.serviceWorker.register("sw.js").catch(function () {});
     }
 
-    switchTab("home");
+    App.db.getSettings().then(function (settings) {
+      App.utils.setCurrency((settings && settings.currency) || "INR");
+      switchTab("home");
+    });
   }
 
   function switchTab(tab) {

@@ -4,9 +4,13 @@
   --text-primary: #1A1D21;
   --text-secondary: #6B7280;
   --border: #E5E7EB;
-  --accent: #4C8DFF;
+  --accent: #4C6FFF;
   --income: #22A06B;
   --expense: #E5484D;
+  --violet: #8B5CF6;
+  --orange: #FF9142;
+  --teal: #0EA5A5;
+  --pink: #EC5C93;
   --nav-bg: rgba(255, 255, 255, 0.92);
   --overlay-bg: rgba(0, 0, 0, 0.45);
 }
@@ -18,9 +22,13 @@
     --text-primary: #F2F3F5;
     --text-secondary: #8B93A1;
     --border: #262C36;
-    --accent: #5B9BFF;
+    --accent: #6C8CFF;
     --income: #34C98E;
     --expense: #FF6B6B;
+    --violet: #A78BFA;
+    --orange: #FFA75C;
+    --teal: #2DD4BF;
+    --pink: #FF7FB0;
     --nav-bg: rgba(22, 27, 34, 0.92);
     --overlay-bg: rgba(0, 0, 0, 0.6);
   }
@@ -64,7 +72,7 @@ input {
 /* ---------- Banner (Home) ---------- */
 
 .banner {
-  background: var(--card-bg);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--card-bg)), var(--card-bg) 65%);
   border-radius: 16px;
   padding: 16px;
   margin-top: 16px;
@@ -205,14 +213,14 @@ input {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--violet));
   color: #fff;
   font-size: 28px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 45%, transparent);
   z-index: 50;
 }
 
@@ -364,8 +372,8 @@ input {
 }
 
 .chip-selected {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  border-color: transparent;
   color: #fff;
 }
 
@@ -502,11 +510,11 @@ input {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--bg);
+  background: linear-gradient(135deg, var(--accent), var(--violet));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 22px;
   flex-shrink: 0;
 }
 
@@ -571,6 +579,12 @@ input {
   vertical-align: middle;
 }
 
+.badge-blue { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.badge-violet { background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet); }
+.badge-orange { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+.badge-teal { background: color-mix(in srgb, var(--teal) 18%, transparent); color: var(--teal); }
+.badge-pink { background: color-mix(in srgb, var(--pink) 18%, transparent); color: var(--pink); }
+
 .computed-value {
   padding: 12px 14px;
   border-radius: 10px;
@@ -600,8 +614,8 @@ input {
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 8px;
-  background: var(--bg);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--teal) 18%, transparent);
+  color: var(--teal);
   margin-right: 4px;
   vertical-align: middle;
 }
@@ -653,4 +667,25 @@ input {
 
 .progress-fill.over {
   background: var(--expense);
+}
+
+/* ---------- About ---------- */
+
+.about-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--violet) 10%, var(--card-bg)), var(--card-bg) 70%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.about-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.about-tagline {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.4;
 }

@@ -148,6 +148,7 @@ App.forms = (function () {
       var disabled = (m === "Credit Card" && !cardList.length) || ((m === "Debit Card" || m === "UPI") && !bankList.length);
       return chipHtml(m, m, m === mode, "data-mode", disabled);
     }).join("");
+    var modeHint = modeUnlockHint(cardList, bankList);
 
     overlay = document.createElement("div");
     overlay.className = "sheet-backdrop";
@@ -163,6 +164,7 @@ App.forms = (function () {
           '<div id="f-category-container"></div>' +
           '<label class="field-label">Mode of Payment</label>' +
           '<div class="chip-row" id="f-mode-row">' + modeChips + "</div>" +
+          (modeHint ? '<p class="field-hint">' + modeHint + "</p>" : "") +
           '<div id="f-linked-row"></div>' +
           '<label class="field-label">Note</label>' +
           '<input type="text" class="field-input" id="f-note" placeholder="Optional" value="' + u.escapeHtml(note) + '">' +
@@ -487,6 +489,15 @@ App.forms = (function () {
     if (bankList.length) return "UPI";
     if (cardList.length) return "Credit Card";
     return "Cash";
+  }
+
+  function modeUnlockHint(cardList, bankList) {
+    if (!bankList.length && !cardList.length) {
+      return "Add a Bank Account or Credit Card in the Accounts tab to unlock UPI, Debit Card, and Credit Card modes.";
+    }
+    if (!bankList.length) return "Add a Bank Account in the Accounts tab to unlock UPI and Debit Card modes.";
+    if (!cardList.length) return "Add a Credit Card in the Accounts tab to unlock Credit Card mode.";
+    return null;
   }
 
   function chipHtml(label, value, selected, dataAttr, disabled) {

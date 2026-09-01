@@ -2,7 +2,7 @@ var App = App || {};
 
 App.db = (function () {
   var DB_NAME = "budget-pwa";
-  var DB_VERSION = 3;
+  var DB_VERSION = 4;
   var dbPromise = null;
 
   function open() {
@@ -35,6 +35,9 @@ App.db = (function () {
         }
         if (!db.objectStoreNames.contains("budgets")) {
           db.createObjectStore("budgets", { keyPath: "category" });
+        }
+        if (!db.objectStoreNames.contains("settings")) {
+          db.createObjectStore("settings", { keyPath: "id" });
         }
       };
       req.onsuccess = function (e) {
@@ -235,6 +238,19 @@ App.db = (function () {
     });
   }
 
+  // Settings (single record, id "app")
+
+  function getSettings() {
+    return withStore("settings", "readonly", function (store) {
+      return reqToPromise(store.get("app"));
+    });
+  }
+
+  function saveSettings(s) {
+    s.id = "app";
+    return put("settings", s);
+  }
+
   // Budgets
 
   function setBudget(category, amount) {
@@ -266,9 +282,10 @@ App.db = (function () {
       getAllLoans(),
       getAllCreditCards(),
       getAllBudgets(),
+      getSettings(),
     ]).then(function (r) {
       return {
-        version: 3,
+        version: 4,
         exportedAt: new Date().toISOString(),
         transactions: r[0],
         accounts: r[1],
@@ -277,6 +294,7 @@ App.db = (function () {
         loans: r[4],
         creditCards: r[5],
         budgets: r[6],
+        settings: r[7] || null,
       };
     });
   }
@@ -290,6 +308,7 @@ App.db = (function () {
       clear("loans"),
       clear("creditCards"),
       clear("budgets"),
+      clear("settings"),
     ]).then(function () {
       var ops = [];
       (data.transactions || []).forEach(function (t) {
@@ -311,6 +330,7 @@ App.db = (function () {
       (data.budgets || []).forEach(function (b) {
         ops.push(put("budgets", b));
       });
+      if (data.settings) ops.push(put("settings", data.settings));
       return Promise.all(ops);
     });
   }
@@ -339,6 +359,8 @@ App.db = (function () {
     updateCreditCard: updateCreditCard,
     deleteCreditCard: deleteCreditCard,
     getAllCreditCards: getAllCreditCards,
+    getSettings: getSettings,
+    saveSettings: saveSettings,
     setBudget: setBudget,
     getBudget: getBudget,
     deleteBudget: deleteBudget,
