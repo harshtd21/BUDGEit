@@ -192,6 +192,7 @@ App.loans = (function () {
       '<input type="number" inputmode="decimal" step="0.01" class="field-input" id="l-principal" placeholder="0.00" value="' + (existing ? u.formatPlain(existing.startingPrincipal) : "") + '">' +
       '<label class="field-label">Interest Rate (% per year)</label>' +
       '<input type="number" inputmode="decimal" step="0.01" min="0" class="field-input" id="l-rate" value="' + (existing ? existing.interestRate : "") + '">' +
+      '<p class="field-hint">On the 1st of every month, interest on the current outstanding principal is added to it automatically — not logged as an expense, just like a real loan. Repayments you log reduce the principal the same way as before.</p>' +
       '<label class="field-label">Outstanding Tenure (months)</label>' +
       '<input type="number" inputmode="numeric" step="1" min="0" class="field-input" id="l-tenure" value="' + (existing ? existing.startingTenureMonths : "") + '">' +
       '<label class="field-label">Current EMI (calculated)</label>' +

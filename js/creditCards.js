@@ -12,8 +12,7 @@ App.creditCards = (function () {
         '<div class="item-list">' +
         (cards.length ? cards.map(function (c) { return rowHtml(c, txs); }).join("") : '<div class="empty-list">No credit cards yet.</div>') +
         "</div>" +
-        '<button type="button" class="secondary-btn" id="add-card-btn">+ Add Credit Card</button>' +
-        '<button type="button" class="secondary-btn" id="import-statement-btn">Import Statement</button>';
+        '<button type="button" class="secondary-btn" id="add-card-btn">+ Add Credit Card</button>';
 
       container.querySelectorAll("[data-id]").forEach(function (row) {
         row.addEventListener("click", function () {
@@ -24,9 +23,6 @@ App.creditCards = (function () {
       container.querySelector("#add-card-btn").addEventListener("click", function () {
         openForm(null, container, txs);
       });
-      container.querySelector("#import-statement-btn").addEventListener("click", function () {
-        App.statementImport.openImportFlow();
-      });
     });
   }
 
@@ -36,6 +32,9 @@ App.creditCards = (function () {
       '<div class="item-row" data-id="' + c.id + '">' +
       '<div class="item-main">' +
       '<div class="item-title">' + u.escapeHtml(c.bankName) + "</div>" +
+      (c.statementStartDate && c.statementEndDate
+        ? '<div class="item-sub">' + c.statementStartDate + " to " + c.statementEndDate + "</div>"
+        : "") +
       "</div>" +
       '<div class="item-value">' + u.formatCurrency(s.amountPayable) + "</div>" +
       "</div>"
@@ -44,6 +43,8 @@ App.creditCards = (function () {
 
   function openForm(existing, container, txs) {
     var isEdit = !!existing;
+    var startDate = existing && existing.statementStartDate ? existing.statementStartDate : u.startOfMonth(u.todayISO());
+    var endDate = existing && existing.statementEndDate ? existing.statementEndDate : u.todayISO();
     var overlay = document.createElement("div");
     overlay.className = "sheet-backdrop";
     overlay.innerHTML =
@@ -56,9 +57,14 @@ App.creditCards = (function () {
       '<div class="form-body">' +
       '<label class="field-label">Bank Name</label>' +
       '<input type="text" class="field-input" id="c-bank" value="' + (existing ? u.escapeHtml(existing.bankName) : "") + '">' +
+      '<label class="field-label">Statement Start Date</label>' +
+      '<input type="date" class="field-input" id="c-start" value="' + startDate + '">' +
+      '<label class="field-label">Statement End Date</label>' +
+      '<input type="date" class="field-input" id="c-end" value="' + endDate + '">' +
+      '<p class="field-hint">Amount Payable only counts expenses and payments dated within this range — update these to match each new statement period.</p>' +
       '<label class="field-label">Amount Payable</label>' +
       '<input type="number" inputmode="decimal" step="0.01" class="field-input" id="c-payable" placeholder="0.00" value="' + (existing ? u.formatPlain(existing.startingAmountPayable) : "") + '">' +
-      '<p class="field-hint">Rises with expenses on this card, falls when you log a Transfer from a bank account to this card as a bill payment.</p>' +
+      '<p class="field-hint">Rises with expenses on this card, falls when you log a Transfer from a bank account to this card as a bill payment — both scoped to the statement dates above.</p>' +
       (isEdit
         ? '<p class="field-hint">Editing these corrects the starting point only — it does not remove the effect of transactions already linked to this card.</p>'
         : "") +
@@ -91,10 +97,20 @@ App.creditCards = (function () {
     function save() {
       var errorEl = overlay.querySelector("#c-error");
       var bankName = overlay.querySelector("#c-bank").value.trim();
+      var statementStart = overlay.querySelector("#c-start").value;
+      var statementEnd = overlay.querySelector("#c-end").value;
       var payable = parseFloat(overlay.querySelector("#c-payable").value);
 
       if (!bankName) {
         errorEl.textContent = "Please enter a bank name.";
+        return;
+      }
+      if (!statementStart || !statementEnd) {
+        errorEl.textContent = "Please enter both statement dates.";
+        return;
+      }
+      if (statementStart > statementEnd) {
+        errorEl.textContent = "Statement start date must be before the end date.";
         return;
       }
       if (isNaN(payable) || payable < 0) {
@@ -105,6 +121,8 @@ App.creditCards = (function () {
       var record = {
         id: isEdit ? existing.id : u.uuid(),
         bankName: bankName,
+        statementStartDate: statementStart,
+        statementEndDate: statementEnd,
         startingAmountPayable: u.round2(payable),
         createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString(),

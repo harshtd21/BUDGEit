@@ -35,16 +35,48 @@ App.derived = (function () {
     };
   }
 
+  // Simulates monthly interest accrual mirroring a real loan: on the 1st of
+  // every month since the loan was added, interest (based on the outstanding
+  // balance at that point) is added to the principal — not logged as an
+  // expense, just folded into the balance. Repayments (logged expenses under
+  // the loan's category) are applied in date order alongside those accruals,
+  // so paying on time offsets the interest instead of letting it compound.
+  function simulateLoanBalance(loan, payments) {
+    var monthlyRate = (loan.interestRate || 0) / 12 / 100;
+    var startDate = (loan.createdAt || u.todayISO()).slice(0, 10);
+    var today = u.todayISO();
+
+    var events = payments.map(function (p) {
+      return { date: p.date, type: "payment", amount: p.amount };
+    });
+    var cursor = u.addMonths(u.startOfMonth(startDate), 1);
+    while (cursor <= today) {
+      events.push({ date: cursor, type: "accrue" });
+      cursor = u.addMonths(cursor, 1);
+    }
+    events.sort(function (a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      if (a.type === b.type) return 0;
+      return a.type === "accrue" ? -1 : 1; // interest accrues before that day's payment is applied
+    });
+
+    var balance = loan.startingPrincipal || 0;
+    events.forEach(function (e) {
+      if (e.type === "accrue") balance += balance * monthlyRate;
+      else balance -= e.amount;
+    });
+    return Math.max(0, u.round2(balance));
+  }
+
   function loanState(loan, txs) {
-    var paid = 0;
-    var paymentsMade = 0;
+    var payments = [];
     txs.forEach(function (t) {
       if (t.type === "expense" && t.category === loan.name) {
-        paid += t.amount;
-        paymentsMade += 1;
+        payments.push({ date: t.date, amount: t.amount });
       }
     });
-    var currentPrincipal = Math.max(0, u.round2(loan.startingPrincipal - paid));
+    var paymentsMade = payments.length;
+    var currentPrincipal = simulateLoanBalance(loan, payments);
     var currentTenureMonths = Math.max(0, loan.startingTenureMonths - paymentsMade);
     return {
       currentPrincipal: currentPrincipal,
@@ -85,9 +117,16 @@ App.derived = (function () {
   }
 
   function cardState(card, txs) {
+    // Amount Payable is scoped to the card's statement period: only expenses
+    // and payments dated within [statementStartDate, statementEndDate] count.
+    // Missing dates fall back to "no lower bound" / "through today", so cards
+    // created before this field existed keep working unfiltered until edited.
+    var start = card.statementStartDate || "0000-01-01";
+    var end = card.statementEndDate || u.todayISO();
     var cardExpenses = 0;
     var paymentsToCard = 0;
     txs.forEach(function (t) {
+      if (t.date < start || t.date > end) return;
       if (t.type === "expense" && t.cardId === card.id) {
         cardExpenses += t.amount;
       } else if (t.type === "transfer" && t.toCardId === card.id) {

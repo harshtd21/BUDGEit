@@ -4,10 +4,6 @@ App.trends = (function () {
   var u = App.utils;
   var anchor = u.todayISO();
 
-  var CATEGORY_COLORS = [
-    "#4C8DFF", "#FF9F45", "#5AD1A6", "#FF6B6B", "#B18CFF", "#FFD166", "#4ECDC4", "#F27CA6",
-  ];
-
   var MODE_COLORS = {
     "UPI": "#4C8DFF",
     "Credit Card": "#FF9F45",
@@ -26,7 +22,7 @@ App.trends = (function () {
       "</div>" +
       '<div class="trend-card">' +
       '<h3>Spending by Category</h3>' +
-      '<canvas id="chart-category" class="chart-canvas chart-tall"></canvas>' +
+      '<div id="chart-category" class="heatmap-grid"></div>' +
       "</div>" +
       '<div class="trend-card" id="top5-card"></div>' +
       '<div class="trend-card" id="budget-variance-card"></div>' +
@@ -91,10 +87,10 @@ App.trends = (function () {
   }
 
   function drawCategoryChart(totals) {
-    var items = totals.map(function (t, idx) {
-      return { label: t.category, value: t.value, color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] };
+    var items = totals.map(function (t) {
+      return { label: t.category, value: t.value };
     });
-    App.charts.horizontalBars(document.getElementById("chart-category"), items);
+    App.charts.categoryHeatmap(document.getElementById("chart-category"), items);
   }
 
   function renderTop5(totals) {
