@@ -130,11 +130,12 @@ App.forms = (function () {
     });
   }
 
+  var OTHERS_VALUE = "__others__";
+
   function buildExpenseForm(existing, expenseType, categoryList, cardList, bankList) {
     var isEdit = !!existing;
     var date = existing ? existing.date : u.todayISO();
     var amount = existing ? u.formatPlain(existing.amount) : "";
-    var category = existing ? existing.category : categoryList[0];
     var mode = existing ? existing.mode : defaultMode(cardList, bankList);
     var cardId = existing ? existing.cardId : null;
     var bankAccountId = existing ? existing.bankAccountId : null;
@@ -145,10 +146,8 @@ App.forms = (function () {
     }).join("");
 
     var modeChips = cats.MODES.map(function (m) {
-      var disabled = (m === "Credit Card" && !cardList.length) || ((m === "Debit Card" || m === "UPI") && !bankList.length);
-      return chipHtml(m, m, m === mode, "data-mode", disabled);
+      return chipHtml(m, m, m === mode, "data-mode");
     }).join("");
-    var modeHint = modeUnlockHint(cardList, bankList);
 
     overlay = document.createElement("div");
     overlay.className = "sheet-backdrop";
@@ -164,7 +163,6 @@ App.forms = (function () {
           '<div id="f-category-container"></div>' +
           '<label class="field-label">Mode of Payment</label>' +
           '<div class="chip-row" id="f-mode-row">' + modeChips + "</div>" +
-          (modeHint ? '<p class="field-hint">' + modeHint + "</p>" : "") +
           '<div id="f-linked-row"></div>' +
           '<label class="field-label">Note</label>' +
           '<input type="text" class="field-input" id="f-note" placeholder="Optional" value="' + u.escapeHtml(note) + '">' +
@@ -173,23 +171,48 @@ App.forms = (function () {
     document.body.appendChild(overlay);
 
     var selectedExpenseType = expenseType;
-    var selectedCategory = category;
     var selectedMode = mode;
     var selectedCardId = cardId;
     var selectedBankAccountId = bankAccountId;
+    var othersMode = false;
+    var customCategoryText = "";
+    var selectedCategory = existing ? existing.category : categoryList[0];
+    if (existing && categoryList.indexOf(existing.category) === -1) {
+      othersMode = true;
+      customCategoryText = existing.category;
+    }
 
     function renderCategoryRow(list) {
       var container = overlay.querySelector("#f-category-container");
+      var chipsHtml =
+        list.map(function (c) { return chipHtml(c, c, !othersMode && c === selectedCategory, "data-category"); }).join("") +
+        chipHtml("Others", OTHERS_VALUE, othersMode, "data-category");
       container.innerHTML =
-        '<div class="chip-row" id="f-category-row">' +
-        list.map(function (c) { return chipHtml(c, c, c === selectedCategory, "data-category"); }).join("") +
-        "</div>";
+        '<div class="chip-row" id="f-category-row">' + chipsHtml + "</div>" +
+        (othersMode
+          ? '<input type="text" class="field-input" id="f-custom-category" placeholder="Enter category name" value="' + u.escapeHtml(customCategoryText) + '" style="margin-top:8px;">'
+          : "");
+
       container.querySelector("#f-category-row").addEventListener("click", function (e) {
         var btn = e.target.closest("[data-category]");
         if (!btn) return;
-        selectedCategory = btn.getAttribute("data-category");
-        selectChip(overlay, "#f-category-row", btn);
+        var val = btn.getAttribute("data-category");
+        if (val === OTHERS_VALUE) {
+          othersMode = true;
+        } else {
+          othersMode = false;
+          selectedCategory = val;
+        }
+        renderCategoryRow(list);
       });
+
+      if (othersMode) {
+        var input = container.querySelector("#f-custom-category");
+        input.focus();
+        input.addEventListener("input", function () {
+          customCategoryText = input.value;
+        });
+      }
     }
     renderCategoryRow(categoryList);
 
@@ -201,6 +224,7 @@ App.forms = (function () {
       selectedExpenseType = newType;
       selectChip(overlay, "#f-type-row", btn);
       cats.expenseCategoriesAsync(selectedExpenseType).then(function (list) {
+        othersMode = false;
         selectedCategory = list[0];
         renderCategoryRow(list);
       });
@@ -209,17 +233,17 @@ App.forms = (function () {
     function renderLinkedRow() {
       var row = overlay.querySelector("#f-linked-row");
       if (selectedMode === "Credit Card") {
-        row.innerHTML =
-          '<label class="field-label">Card</label>' +
-          '<div class="chip-row" id="f-link-row">' +
-          cardList.map(function (c) { return chipHtml(c.bankName, c.id, c.id === selectedCardId, "data-link-id"); }).join("") +
-          "</div>";
+        row.innerHTML = cardList.length
+          ? '<label class="field-label">Card</label><div class="chip-row" id="f-link-row">' +
+            cardList.map(function (c) { return chipHtml(c.bankName, c.id, c.id === selectedCardId, "data-link-id"); }).join("") +
+            "</div>"
+          : '<p class="field-hint">No credit cards added yet — add one in the Accounts tab to track this card’s balance automatically.</p>';
       } else if (selectedMode === "Debit Card" || selectedMode === "UPI") {
-        row.innerHTML =
-          '<label class="field-label">Bank Account</label>' +
-          '<div class="chip-row" id="f-link-row">' +
-          bankList.map(function (a) { return chipHtml(a.bankName, a.id, a.id === selectedBankAccountId, "data-link-id"); }).join("") +
-          "</div>";
+        row.innerHTML = bankList.length
+          ? '<label class="field-label">Bank Account</label><div class="chip-row" id="f-link-row">' +
+            bankList.map(function (a) { return chipHtml(a.bankName, a.id, a.id === selectedBankAccountId, "data-link-id"); }).join("") +
+            "</div>"
+          : '<p class="field-hint">No bank accounts added yet — add one in the Accounts tab to track its balance automatically.</p>';
       } else {
         row.innerHTML = "";
       }
@@ -239,7 +263,7 @@ App.forms = (function () {
 
     overlay.querySelector("#f-mode-row").addEventListener("click", function (e) {
       var btn = e.target.closest("[data-mode]");
-      if (!btn || btn.classList.contains("chip-disabled")) return;
+      if (!btn) return;
       selectedMode = btn.getAttribute("data-mode");
       selectedCardId = null;
       selectedBankAccountId = null;
@@ -261,30 +285,39 @@ App.forms = (function () {
         errorEl.textContent = "Please enter an amount greater than 0.";
         return;
       }
-      if (selectedMode === "Credit Card" && !selectedCardId) {
+      if (othersMode && !customCategoryText.trim()) {
+        errorEl.textContent = "Please enter a category name.";
+        return;
+      }
+      if (selectedMode === "Credit Card" && cardList.length && !selectedCardId) {
         errorEl.textContent = "Please select a card.";
         return;
       }
-      if ((selectedMode === "Debit Card" || selectedMode === "UPI") && !selectedBankAccountId) {
+      if ((selectedMode === "Debit Card" || selectedMode === "UPI") && bankList.length && !selectedBankAccountId) {
         errorEl.textContent = "Please select a bank account.";
         return;
       }
 
-      var record = {
-        id: existing ? existing.id : u.uuid(),
-        type: "expense",
-        expenseType: selectedExpenseType,
-        date: dateVal,
-        amount: u.round2(amountVal),
-        category: selectedCategory,
-        mode: selectedMode,
-        cardId: selectedMode === "Credit Card" ? selectedCardId : null,
-        bankAccountId: selectedMode === "Debit Card" || selectedMode === "UPI" ? selectedBankAccountId : null,
-        note: noteVal,
-        createdAt: existing ? existing.createdAt : new Date().toISOString(),
-      };
-      var op = existing ? App.db.updateTransaction(record) : App.db.addTransaction(record);
-      op.then(function () {
+      var categoryPromise = othersMode
+        ? cats.resolveOrCreateCustomCategory(customCategoryText, selectedExpenseType)
+        : Promise.resolve(selectedCategory);
+
+      categoryPromise.then(function (finalCategory) {
+        var record = {
+          id: existing ? existing.id : u.uuid(),
+          type: "expense",
+          expenseType: selectedExpenseType,
+          date: dateVal,
+          amount: u.round2(amountVal),
+          category: finalCategory,
+          mode: selectedMode,
+          cardId: selectedMode === "Credit Card" ? selectedCardId : null,
+          bankAccountId: selectedMode === "Debit Card" || selectedMode === "UPI" ? selectedBankAccountId : null,
+          note: noteVal,
+          createdAt: existing ? existing.createdAt : new Date().toISOString(),
+        };
+        return existing ? App.db.updateTransaction(record) : App.db.addTransaction(record);
+      }).then(function () {
         closeOverlay();
         App.app.refreshActiveTab();
       });
@@ -489,15 +522,6 @@ App.forms = (function () {
     if (bankList.length) return "UPI";
     if (cardList.length) return "Credit Card";
     return "Cash";
-  }
-
-  function modeUnlockHint(cardList, bankList) {
-    if (!bankList.length && !cardList.length) {
-      return "Add a Bank Account or Credit Card in the Accounts tab to unlock UPI, Debit Card, and Credit Card modes.";
-    }
-    if (!bankList.length) return "Add a Bank Account in the Accounts tab to unlock UPI and Debit Card modes.";
-    if (!cardList.length) return "Add a Credit Card in the Accounts tab to unlock Credit Card mode.";
-    return null;
   }
 
   function chipHtml(label, value, selected, dataAttr, disabled) {

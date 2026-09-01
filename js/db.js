@@ -2,7 +2,7 @@ var App = App || {};
 
 App.db = (function () {
   var DB_NAME = "budget-pwa";
-  var DB_VERSION = 4;
+  var DB_VERSION = 5;
   var dbPromise = null;
 
   function open() {
@@ -38,6 +38,9 @@ App.db = (function () {
         }
         if (!db.objectStoreNames.contains("settings")) {
           db.createObjectStore("settings", { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains("customCategories")) {
+          db.createObjectStore("customCategories", { keyPath: "id" });
         }
       };
       req.onsuccess = function (e) {
@@ -238,6 +241,16 @@ App.db = (function () {
     });
   }
 
+  // Custom categories (user-created via the "Others" option on the Expense form)
+
+  function addCustomCategory(c) {
+    return put("customCategories", c);
+  }
+
+  function getAllCustomCategories() {
+    return getAll("customCategories");
+  }
+
   // Settings (single record, id "app")
 
   function getSettings() {
@@ -283,9 +296,10 @@ App.db = (function () {
       getAllCreditCards(),
       getAllBudgets(),
       getSettings(),
+      getAllCustomCategories(),
     ]).then(function (r) {
       return {
-        version: 4,
+        version: 5,
         exportedAt: new Date().toISOString(),
         transactions: r[0],
         accounts: r[1],
@@ -295,6 +309,7 @@ App.db = (function () {
         creditCards: r[5],
         budgets: r[6],
         settings: r[7] || null,
+        customCategories: r[8],
       };
     });
   }
@@ -309,6 +324,7 @@ App.db = (function () {
       clear("creditCards"),
       clear("budgets"),
       clear("settings"),
+      clear("customCategories"),
     ]).then(function () {
       var ops = [];
       (data.transactions || []).forEach(function (t) {
@@ -331,6 +347,9 @@ App.db = (function () {
         ops.push(put("budgets", b));
       });
       if (data.settings) ops.push(put("settings", data.settings));
+      (data.customCategories || []).forEach(function (c) {
+        ops.push(put("customCategories", c));
+      });
       return Promise.all(ops);
     });
   }
@@ -359,6 +378,8 @@ App.db = (function () {
     updateCreditCard: updateCreditCard,
     deleteCreditCard: deleteCreditCard,
     getAllCreditCards: getAllCreditCards,
+    addCustomCategory: addCustomCategory,
+    getAllCustomCategories: getAllCustomCategories,
     getSettings: getSettings,
     saveSettings: saveSettings,
     setBudget: setBudget,
