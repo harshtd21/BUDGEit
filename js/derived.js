@@ -95,7 +95,6 @@ App.derived = (function () {
       }
     });
     return {
-      outstandingBalance: u.round2((card.startingOutstandingBalance || 0) + cardExpenses),
       amountPayable: Math.max(0, u.round2((card.startingAmountPayable || 0) + cardExpenses - paymentsToCard)),
     };
   }

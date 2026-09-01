@@ -36,9 +36,8 @@ App.creditCards = (function () {
       '<div class="item-row" data-id="' + c.id + '">' +
       '<div class="item-main">' +
       '<div class="item-title">' + u.escapeHtml(c.bankName) + "</div>" +
-      '<div class="item-sub">Amount Payable: ' + u.formatCurrency(s.amountPayable) + "</div>" +
       "</div>" +
-      '<div class="item-value">' + u.formatCurrency(s.outstandingBalance) + "</div>" +
+      '<div class="item-value">' + u.formatCurrency(s.amountPayable) + "</div>" +
       "</div>"
     );
   }
@@ -59,10 +58,7 @@ App.creditCards = (function () {
       '<input type="text" class="field-input" id="c-bank" value="' + (existing ? u.escapeHtml(existing.bankName) : "") + '">' +
       '<label class="field-label">Amount Payable</label>' +
       '<input type="number" inputmode="decimal" step="0.01" class="field-input" id="c-payable" placeholder="0.00" value="' + (existing ? u.formatPlain(existing.startingAmountPayable) : "") + '">' +
-      '<p class="field-hint">Current bill due — rises with card spend, falls as you pay it off via Transfer.</p>' +
-      '<label class="field-label">Outstanding Balance</label>' +
-      '<input type="number" inputmode="decimal" step="0.01" class="field-input" id="c-outstanding" placeholder="0.00" value="' + (existing ? u.formatPlain(existing.startingOutstandingBalance) : "") + '">' +
-      '<p class="field-hint">Lifetime running total — only ever increases with card spend.</p>' +
+      '<p class="field-hint">Rises with expenses on this card, falls when you log a Transfer from a bank account to this card as a bill payment.</p>' +
       (isEdit
         ? '<p class="field-hint">Editing these corrects the starting point only — it does not remove the effect of transactions already linked to this card.</p>'
         : "") +
@@ -96,7 +92,6 @@ App.creditCards = (function () {
       var errorEl = overlay.querySelector("#c-error");
       var bankName = overlay.querySelector("#c-bank").value.trim();
       var payable = parseFloat(overlay.querySelector("#c-payable").value);
-      var outstanding = parseFloat(overlay.querySelector("#c-outstanding").value);
 
       if (!bankName) {
         errorEl.textContent = "Please enter a bank name.";
@@ -106,16 +101,11 @@ App.creditCards = (function () {
         errorEl.textContent = "Please enter a valid amount payable.";
         return;
       }
-      if (isNaN(outstanding) || outstanding < 0) {
-        errorEl.textContent = "Please enter a valid outstanding balance.";
-        return;
-      }
 
       var record = {
         id: isEdit ? existing.id : u.uuid(),
         bankName: bankName,
         startingAmountPayable: u.round2(payable),
-        startingOutstandingBalance: u.round2(outstanding),
         createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
