@@ -1,4 +1,4 @@
-var CACHE_NAME = "budget-pwa-v6";
+var CACHE_NAME = "budget-pwa-v7";
 var APP_SHELL = [
   "./",
   "index.html",
