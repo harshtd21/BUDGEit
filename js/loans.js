@@ -156,7 +156,7 @@ App.loans = (function () {
         };
         var op = isEdit ? App.db.updateShortTermEmi(record) : App.db.addShortTermEmi(record);
         op.then(function () {
-          if (isEdit && oldName && oldName !== name) return cascadeRenameCategory(oldName, name);
+          if (isEdit && oldName && oldName !== name) return cats.cascadeRenameCategory(oldName, name);
         }).then(function () {
           overlay.remove();
           render(container);
@@ -283,32 +283,13 @@ App.loans = (function () {
         };
         var op = isEdit ? App.db.updateLoan(record) : App.db.addLoan(record);
         op.then(function () {
-          if (isEdit && oldName && oldName !== name) return cascadeRenameCategory(oldName, name);
+          if (isEdit && oldName && oldName !== name) return cats.cascadeRenameCategory(oldName, name);
         }).then(function () {
           overlay.remove();
           render(container);
         });
       });
     }
-  }
-
-  function cascadeRenameCategory(oldName, newName) {
-    var renameTransactions = App.db.getAllTransactions().then(function (all) {
-      var toUpdate = all.filter(function (t) { return t.type === "expense" && t.category === oldName; });
-      return Promise.all(
-        toUpdate.map(function (t) {
-          t.category = newName;
-          return App.db.updateTransaction(t);
-        })
-      );
-    });
-    var renameBudget = App.db.getBudget(oldName).then(function (b) {
-      if (!b) return;
-      return App.db.deleteBudget(oldName).then(function () {
-        return App.db.setBudget(newName, b.amount);
-      });
-    });
-    return Promise.all([renameTransactions, renameBudget]);
   }
 
   return { render: render };

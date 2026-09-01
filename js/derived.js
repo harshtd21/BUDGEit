@@ -54,6 +54,36 @@ App.derived = (function () {
     };
   }
 
+  function investmentState(investment, txs) {
+    var contributed = 0;
+    txs.forEach(function (t) {
+      if (t.type === "expense" && t.category === investment.name) contributed += t.amount;
+    });
+    return {
+      currentAmount: u.round2((investment.startingAmount || 0) + contributed),
+    };
+  }
+
+  function computeNetWorth() {
+    return Promise.all([
+      App.db.getAllInvestments(),
+      App.db.getAllLoans(),
+      App.db.getAllShortTermEmis(),
+      App.db.getAllTransactions(),
+    ]).then(function (r) {
+      var investments = r[0], loanList = r[1], emis = r[2], txs = r[3];
+      var assets = investments.reduce(function (s, i) { return s + investmentState(i, txs).currentAmount; }, 0);
+      var liabilities =
+        loanList.reduce(function (s, l) { return s + loanState(l, txs).currentPrincipal; }, 0) +
+        emis.reduce(function (s, e) { return s + emiState(e, txs).currentPrincipal; }, 0);
+      return {
+        assets: u.round2(assets),
+        liabilities: u.round2(liabilities),
+        net: u.round2(assets - liabilities),
+      };
+    });
+  }
+
   function cardState(card, txs) {
     var cardExpenses = 0;
     var paymentsToCard = 0;
@@ -86,6 +116,8 @@ App.derived = (function () {
     bankAccountBalance: bankAccountBalance,
     emiState: emiState,
     loanState: loanState,
+    investmentState: investmentState,
+    computeNetWorth: computeNetWorth,
     cardState: cardState,
     hasLinkedTransactions: hasLinkedTransactions,
   };

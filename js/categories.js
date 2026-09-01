@@ -50,10 +50,11 @@ App.categories = {
       if (expenseType === "Trip") {
         return App.categories.TRIP.concat(customNames);
       }
-      return Promise.all([App.db.getAllShortTermEmis(), App.db.getAllLoans()]).then(function (r) {
+      return Promise.all([App.db.getAllShortTermEmis(), App.db.getAllLoans(), App.db.getAllInvestments()]).then(function (r) {
         var emiNames = r[0].map(function (e) { return e.name; });
         var loanNames = r[1].map(function (l) { return l.name; });
-        return App.categories.EVERYDAY.concat(emiNames, loanNames, customNames);
+        var investmentNames = r[2].map(function (i) { return i.name; });
+        return App.categories.EVERYDAY.concat(emiNames, loanNames, investmentNames, customNames);
       });
     });
   },
@@ -72,19 +73,46 @@ App.categories = {
     });
   },
 
-  // Validates a proposed loan/EMI name doesn't collide with the base
-  // category lists, another loan/EMI's name, or a custom category
+  // Validates a proposed loan/EMI/investment name doesn't collide with the
+  // base category lists or another loan/EMI/investment/custom category
   // (case-insensitive), so the category-based link stays unambiguous.
   isNameAvailable: function (name, excludeId) {
     var lower = name.trim().toLowerCase();
     var baseLists = App.categories.EVERYDAY.concat(App.categories.TRIP);
     if (baseLists.some(function (c) { return c.toLowerCase() === lower; })) return Promise.resolve(false);
-    return Promise.all([App.db.getAllShortTermEmis(), App.db.getAllLoans(), App.db.getAllCustomCategories()]).then(function (r) {
-      var nameCollision = r[0].concat(r[1]).some(function (item) {
+    return Promise.all([
+      App.db.getAllShortTermEmis(),
+      App.db.getAllLoans(),
+      App.db.getAllInvestments(),
+      App.db.getAllCustomCategories(),
+    ]).then(function (r) {
+      var nameCollision = r[0].concat(r[1], r[2]).some(function (item) {
         return item.id !== excludeId && item.name.toLowerCase() === lower;
       });
-      var customCollision = r[2].some(function (c) { return c.name.toLowerCase() === lower; });
+      var customCollision = r[3].some(function (c) { return c.name.toLowerCase() === lower; });
       return !nameCollision && !customCollision;
     });
+  },
+
+  // Shared by Loans/EMIs/Investments: when one of those is renamed, moves its
+  // linked transactions' category string and any budget record over to the
+  // new name so the category-based link isn't broken.
+  cascadeRenameCategory: function (oldName, newName) {
+    var renameTransactions = App.db.getAllTransactions().then(function (all) {
+      var toUpdate = all.filter(function (t) { return t.type === "expense" && t.category === oldName; });
+      return Promise.all(
+        toUpdate.map(function (t) {
+          t.category = newName;
+          return App.db.updateTransaction(t);
+        })
+      );
+    });
+    var renameBudget = App.db.getBudget(oldName).then(function (b) {
+      if (!b) return;
+      return App.db.deleteBudget(oldName).then(function () {
+        return App.db.setBudget(newName, b.amount);
+      });
+    });
+    return Promise.all([renameTransactions, renameBudget]);
   },
 };

@@ -8,6 +8,8 @@ App.accounts = (function () {
     root.innerHTML =
       '<div id="section-profile"></div>' +
       '<div id="section-bank-accounts" style="margin-top:28px;"></div>' +
+      '<div id="section-net-worth"></div>' +
+      '<div id="section-investments" style="margin-top:28px;"></div>' +
       '<div id="section-loans" style="margin-top:28px;"></div>' +
       '<div id="section-credit-cards" style="margin-top:28px;"></div>' +
       '<div id="section-about" style="margin-top:28px;"></div>' +
@@ -20,6 +22,8 @@ App.accounts = (function () {
 
     App.profile.render(document.getElementById("section-profile"));
     App.bankAccounts.render(document.getElementById("section-bank-accounts"));
+    renderNetWorthBanner(document.getElementById("section-net-worth"));
+    App.investments.render(document.getElementById("section-investments"));
     App.loans.render(document.getElementById("section-loans"));
     App.creditCards.render(document.getElementById("section-credit-cards"));
     App.about.render(document.getElementById("section-about"));
@@ -31,6 +35,19 @@ App.accounts = (function () {
     });
     importInput.addEventListener("change", function (e) {
       if (e.target.files && e.target.files[0]) importData(e.target.files[0]);
+    });
+  }
+
+  function renderNetWorthBanner(container) {
+    App.derived.computeNetWorth().then(function (n) {
+      container.innerHTML =
+        '<div class="banner">' +
+        '<div class="banner-stats">' +
+        '<div class="stat"><span class="stat-label">Assets</span><span class="stat-value income">' + u.formatCurrency(n.assets) + "</span></div>" +
+        '<div class="stat"><span class="stat-label">Liabilities</span><span class="stat-value expense">' + u.formatCurrency(n.liabilities) + "</span></div>" +
+        '<div class="stat"><span class="stat-label">Net</span><span class="stat-value ' + (n.net >= 0 ? "income" : "expense") + '">' + u.formatCurrency(n.net) + "</span></div>" +
+        "</div>" +
+        "</div>";
     });
   }
 

@@ -1,4 +1,4 @@
-var CACHE_NAME = "budget-pwa-v5";
+var CACHE_NAME = "budget-pwa-v6";
 var APP_SHELL = [
   "./",
   "index.html",
@@ -15,7 +15,9 @@ var APP_SHELL = [
   "js/trends.js",
   "js/profile.js",
   "js/bankAccounts.js",
+  "js/investments.js",
   "js/loans.js",
+  "js/statementImport.js",
   "js/creditCards.js",
   "js/about.js",
   "js/accounts.js",

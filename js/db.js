@@ -2,7 +2,7 @@ var App = App || {};
 
 App.db = (function () {
   var DB_NAME = "budget-pwa";
-  var DB_VERSION = 5;
+  var DB_VERSION = 6;
   var dbPromise = null;
 
   function open() {
@@ -41,6 +41,9 @@ App.db = (function () {
         }
         if (!db.objectStoreNames.contains("customCategories")) {
           db.createObjectStore("customCategories", { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains("investments")) {
+          db.createObjectStore("investments", { keyPath: "id" });
         }
       };
       req.onsuccess = function (e) {
@@ -241,6 +244,28 @@ App.db = (function () {
     });
   }
 
+  // Investments
+
+  function addInvestment(i) {
+    return put("investments", i);
+  }
+
+  function updateInvestment(i) {
+    return put("investments", i);
+  }
+
+  function deleteInvestment(id) {
+    return remove("investments", id);
+  }
+
+  function getAllInvestments() {
+    return getAll("investments").then(function (all) {
+      return all.sort(function (a, b) {
+        return a.name.localeCompare(b.name);
+      });
+    });
+  }
+
   // Custom categories (user-created via the "Others" option on the Expense form)
 
   function addCustomCategory(c) {
@@ -297,9 +322,10 @@ App.db = (function () {
       getAllBudgets(),
       getSettings(),
       getAllCustomCategories(),
+      getAllInvestments(),
     ]).then(function (r) {
       return {
-        version: 5,
+        version: 6,
         exportedAt: new Date().toISOString(),
         transactions: r[0],
         accounts: r[1],
@@ -310,6 +336,7 @@ App.db = (function () {
         budgets: r[6],
         settings: r[7] || null,
         customCategories: r[8],
+        investments: r[9],
       };
     });
   }
@@ -325,6 +352,7 @@ App.db = (function () {
       clear("budgets"),
       clear("settings"),
       clear("customCategories"),
+      clear("investments"),
     ]).then(function () {
       var ops = [];
       (data.transactions || []).forEach(function (t) {
@@ -349,6 +377,9 @@ App.db = (function () {
       if (data.settings) ops.push(put("settings", data.settings));
       (data.customCategories || []).forEach(function (c) {
         ops.push(put("customCategories", c));
+      });
+      (data.investments || []).forEach(function (i) {
+        ops.push(put("investments", i));
       });
       return Promise.all(ops);
     });
@@ -378,6 +409,10 @@ App.db = (function () {
     updateCreditCard: updateCreditCard,
     deleteCreditCard: deleteCreditCard,
     getAllCreditCards: getAllCreditCards,
+    addInvestment: addInvestment,
+    updateInvestment: updateInvestment,
+    deleteInvestment: deleteInvestment,
+    getAllInvestments: getAllInvestments,
     addCustomCategory: addCustomCategory,
     getAllCustomCategories: getAllCustomCategories,
     getSettings: getSettings,

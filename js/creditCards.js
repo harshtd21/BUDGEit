@@ -12,7 +12,8 @@ App.creditCards = (function () {
         '<div class="item-list">' +
         (cards.length ? cards.map(function (c) { return rowHtml(c, txs); }).join("") : '<div class="empty-list">No credit cards yet.</div>') +
         "</div>" +
-        '<button type="button" class="secondary-btn" id="add-card-btn">+ Add Credit Card</button>';
+        '<button type="button" class="secondary-btn" id="add-card-btn">+ Add Credit Card</button>' +
+        '<button type="button" class="secondary-btn" id="import-statement-btn">Import Statement</button>';
 
       container.querySelectorAll("[data-id]").forEach(function (row) {
         row.addEventListener("click", function () {
@@ -22,6 +23,9 @@ App.creditCards = (function () {
       });
       container.querySelector("#add-card-btn").addEventListener("click", function () {
         openForm(null, container, txs);
+      });
+      container.querySelector("#import-statement-btn").addEventListener("click", function () {
+        App.statementImport.openImportFlow();
       });
     });
   }

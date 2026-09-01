@@ -1,9 +1,9 @@
 :root {
   --bg: #0A1128;
-  --card-bg: #131B3D;
+  --card-bg: #1E1A42;
   --text-primary: #F1F3FF;
   --text-secondary: #8891C0;
-  --border: #24305C;
+  --border: #322B5E;
   --accent: #6C8CFF;
   --income: #34C98E;
   --expense: #FF6B6B;
@@ -129,6 +129,8 @@ input {
 .stat-value {
   font-size: 18px;
   font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-value.income { color: var(--income); }
@@ -669,4 +671,41 @@ input {
   color: var(--text-secondary);
   margin-top: 6px;
   line-height: 1.4;
+}
+
+/* ---------- Statement import (v4) ---------- */
+
+.import-row {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.import-row-fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-row-line {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  overflow-wrap: break-word;
+}
+
+.import-row-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.import-row-inputs .field-input {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.si-include {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
 }
