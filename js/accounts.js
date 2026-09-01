@@ -41,7 +41,7 @@ App.accounts = (function () {
   function renderNetWorthBanner(container) {
     App.derived.computeNetWorth().then(function (n) {
       container.innerHTML =
-        '<div class="banner">' +
+        '<div class="banner net-worth-banner">' +
         '<div class="banner-stats">' +
         '<div class="stat"><span class="stat-label">Assets</span><span class="stat-value income">' + u.formatCurrency(n.assets) + "</span></div>" +
         '<div class="stat"><span class="stat-label">Liabilities</span><span class="stat-value expense">' + u.formatCurrency(n.liabilities) + "</span></div>" +

@@ -136,6 +136,10 @@ input {
 .stat-value.income { color: var(--income); }
 .stat-value.expense { color: var(--expense); }
 
+.net-worth-banner .stat-value {
+  font-size: 14px;
+}
+
 /* ---------- Transaction list ---------- */
 
 .tx-list {
