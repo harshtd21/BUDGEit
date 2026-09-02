@@ -3,6 +3,15 @@ var App = App || {};
 App.home = (function () {
   var u = App.utils;
   var BOM = String.fromCharCode(0xfeff);
+  var EXCEL_ICON_SVG =
+    '<svg width="20" height="20" viewBox="0 0 24 24">' +
+    '<rect x="3" y="2" width="18" height="20" rx="3" fill="#1F8B4C"/>' +
+    '<rect x="6.5" y="5.5" width="11" height="13" fill="none" stroke="#fff" stroke-width="1.2"/>' +
+    '<line x1="6.5" y1="9.5" x2="17.5" y2="9.5" stroke="#fff" stroke-width="1.2"/>' +
+    '<line x1="6.5" y1="13.5" x2="17.5" y2="13.5" stroke="#fff" stroke-width="1.2"/>' +
+    '<line x1="10.5" y1="5.5" x2="10.5" y2="18.5" stroke="#fff" stroke-width="1.2"/>' +
+    '<line x1="14.5" y1="5.5" x2="14.5" y2="18.5" stroke="#fff" stroke-width="1.2"/>' +
+    "</svg>";
   var mode = "day"; // day | month | ytd
   var anchor = u.todayISO(); // reference date within the current period
 
@@ -70,7 +79,7 @@ App.home = (function () {
 
       root.innerHTML =
         '<div class="home-topbar">' +
-        '<button type="button" class="icon-btn" id="export-csv-btn" aria-label="Export to Excel" title="Export to Excel">📤</button>' +
+        '<button type="button" class="icon-btn" id="export-csv-btn" aria-label="Export to Excel" title="Export to Excel">' + EXCEL_ICON_SVG + '</button>' +
         "</div>" +
         '<div class="banner">' +
         '<div class="banner-toggle">' +

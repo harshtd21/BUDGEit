@@ -237,13 +237,13 @@ App.forms = (function () {
           ? '<label class="field-label">Card</label><div class="chip-row" id="f-link-row">' +
             cardList.map(function (c) { return chipHtml(c.bankName, c.id, c.id === selectedCardId, "data-link-id"); }).join("") +
             "</div>"
-          : '<p class="field-hint">No credit cards added yet — add one in the Accounts tab to track this card’s balance automatically.</p>';
+          : '<p class="field-hint">No credit cards added yet — add one in the Profile tab to track this card’s balance automatically.</p>';
       } else if (selectedMode === "Debit Card" || selectedMode === "UPI") {
         row.innerHTML = bankList.length
           ? '<label class="field-label">Bank Account</label><div class="chip-row" id="f-link-row">' +
             bankList.map(function (a) { return chipHtml(a.bankName, a.id, a.id === selectedBankAccountId, "data-link-id"); }).join("") +
             "</div>"
-          : '<p class="field-hint">No bank accounts added yet — add one in the Accounts tab to track its balance automatically.</p>';
+          : '<p class="field-hint">No bank accounts added yet — add one in the Profile tab to track its balance automatically.</p>';
       } else {
         row.innerHTML = "";
       }

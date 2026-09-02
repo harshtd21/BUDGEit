@@ -39,4 +39,4 @@ Custom icons are already generated in `icons/`. If you'd like to redesign them, 
 
 ## Backing up your data
 
-Since all data is local to your phone, use **Accounts → Export Data (JSON)** periodically to save a backup file (e.g. to the Files app or via AirDrop/email to yourself). **Accounts → Import Data (JSON)** restores from a backup, replacing all current data.
+Since all data is local to your phone, use **Profile → Export Data (JSON)** periodically to save a backup file (e.g. to the Files app or via AirDrop/email to yourself). **Profile → Import Data (JSON)** restores from a backup, replacing all current data.
