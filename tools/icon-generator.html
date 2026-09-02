@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <title>Icon Generator</title>
 <style>
-  body { font-family: -apple-system, sans-serif; background: #222; color: #fff; text-align: center; padding: 30px; }
-  canvas { border-radius: 20%; margin: 10px; background: #0B0F14; }
-  button { padding: 10px 16px; margin: 6px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; }
-  p { color: #aaa; font-size: 13px; max-width: 480px; margin: 20px auto; }
+  body { font-family: -apple-system, sans-serif; background: #121214; color: #F2F1F5; text-align: center; padding: 30px; }
+  canvas { border-radius: 20%; margin: 10px; background: #121214; }
+  button { padding: 10px 16px; margin: 6px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; background: #BB86FC; color: #121214; font-weight: 600; }
+  p { color: #9C9AA6; font-size: 13px; max-width: 480px; margin: 20px auto; }
 </style>
 </head>
 <body>
-<h2>Budget App Icon Generator</h2>
-<p>Open this file directly in any browser (double-click it). It draws the app icon at three sizes and lets you download each as a PNG. Save them into the <code>icons/</code> folder using the exact filenames shown, then delete this <code>tools/</code> folder before deploying if you like.</p>
+<h2>BUDGEit App Icon Generator</h2>
+<p>Open this file directly in any browser (double-click it). It draws the "budget book" app icon at three sizes and lets you download each as a PNG. Save them into the <code>icons/</code> folder using the exact filenames shown.</p>
 
 <div>
   <canvas id="c512" width="512" height="512"></canvas><br>
@@ -28,20 +28,31 @@
 </div>
 
 <script>
+var SVG_MARKUP =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
+  '<defs><linearGradient id="cover" x1="0" y1="0" x2="1" y2="1">' +
+  '<stop offset="0" stop-color="#CDA6FF"/><stop offset="1" stop-color="#9B6FE0"/>' +
+  '</linearGradient></defs>' +
+  '<rect x="0" y="0" width="100" height="100" fill="#121214"/>' +
+  '<rect x="21" y="19" width="58" height="68" rx="7" fill="url(#cover)"/>' +
+  '<path d="M21 26 a7 7 0 0 1 7 -7 h8 v68 h-8 a7 7 0 0 1 -7 -7 Z" fill="#7C4FCC"/>' +
+  '<rect x="43" y="33" width="29" height="4.5" rx="2.25" fill="#1E1E24" opacity="0.85"/>' +
+  '<rect x="43" y="45" width="29" height="4.5" rx="2.25" fill="#1E1E24" opacity="0.85"/>' +
+  '<rect x="43" y="57" width="18" height="4.5" rx="2.25" fill="#1E1E24" opacity="0.85"/>' +
+  '<path d="M58 15 h14 v24 l-7 -6 l-7 6 Z" fill="#FFB703"/>' +
+  '</svg>';
+
 function draw(id, size) {
   var canvas = document.getElementById(id);
   var ctx = canvas.getContext("2d");
-  var grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, "#4C8DFF");
-  grad.addColorStop(1, "#22A06B");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-
-  ctx.fillStyle = "#fff";
-  ctx.font = "bold " + Math.round(size * 0.52) + "px -apple-system, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("$", size / 2, size * 0.56);
+  var img = new Image();
+  var blob = new Blob([SVG_MARKUP], { type: "image/svg+xml" });
+  var url = URL.createObjectURL(blob);
+  img.onload = function () {
+    ctx.drawImage(img, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
 }
 
 function download(id, filename) {

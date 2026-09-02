@@ -1,17 +1,17 @@
 :root {
-  --bg: #0A1128;
-  --card-bg: #1E1A42;
-  --text-primary: #F1F3FF;
-  --text-secondary: #8891C0;
-  --border: #322B5E;
-  --accent: #6C8CFF;
+  --bg: #121214;
+  --card-bg: #1E1E24;
+  --text-primary: #F2F1F5;
+  --text-secondary: #9C9AA6;
+  --border: #2E2E36;
+  --accent: #BB86FC;
   --income: #34C98E;
-  --expense: #FF6B6B;
-  --violet: #A78BFA;
-  --orange: #FFA75C;
+  --expense: #FFB703;
+  --violet: #9B6FE0;
+  --orange: #FF8A5C;
   --teal: #2DD4BF;
   --pink: #FF7FB0;
-  --nav-bg: rgba(14, 20, 46, 0.92);
+  --nav-bg: rgba(18, 18, 20, 0.92);
   --overlay-bg: rgba(0, 0, 0, 0.6);
 }
 
@@ -48,6 +48,30 @@ input {
 
 .tab-panel.active {
   display: block;
+}
+
+/* ---------- Home top bar ---------- */
+
+.home-topbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.icon-btn:active {
+  opacity: 0.7;
 }
 
 /* ---------- Banner (Home) ---------- */

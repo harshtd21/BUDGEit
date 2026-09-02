@@ -2,6 +2,7 @@ var App = App || {};
 
 App.home = (function () {
   var u = App.utils;
+  var BOM = String.fromCharCode(0xfeff);
   var mode = "day"; // day | month | ytd
   var anchor = u.todayISO(); // reference date within the current period
 
@@ -68,6 +69,9 @@ App.home = (function () {
         : '<div class="empty-list">No transactions in this period.</div>';
 
       root.innerHTML =
+        '<div class="home-topbar">' +
+        '<button type="button" class="icon-btn" id="export-csv-btn" aria-label="Export to Excel" title="Export to Excel">📤</button>' +
+        "</div>" +
         '<div class="banner">' +
         '<div class="banner-toggle">' +
         modeBtn("day", "Day") +
@@ -87,6 +91,7 @@ App.home = (function () {
         "</div>" +
         '<div class="tx-list">' + listHtml + "</div>";
 
+      root.querySelector("#export-csv-btn").addEventListener("click", exportToExcel);
       root.querySelectorAll("[data-mode]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           setMode(btn.getAttribute("data-mode"));
@@ -154,6 +159,58 @@ App.home = (function () {
       '<div class="tx-amount ' + cls + '">' + sign + u.formatCurrency(t.amount) + "</div>" +
       "</div>"
     );
+  }
+
+  function csvField(v) {
+    var s = v == null ? "" : String(v);
+    if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function buildCsv(txs, bankMap, cardMap) {
+    var rows = [["Date", "Type", "Category", "Expense Type", "Mode of Payment", "Account / Card", "Amount", "Note"]];
+    txs.forEach(function (t) {
+      if (t.type === "transfer") {
+        var fromLabel = t.from === "Bank Account" ? (bankMap[t.fromAccountId] || "Bank Account") : "Bank Refund";
+        var toLabel = t.to === "Bank Account" ? (bankMap[t.toAccountId] || "Bank Account") : (cardMap[t.toCardId] || "Credit Card");
+        rows.push([t.date, "Transfer", "", "", "", fromLabel + " -> " + toLabel, u.formatPlain(t.amount), t.note || ""]);
+      } else if (t.type === "expense") {
+        var linked = "";
+        if (t.mode === "Credit Card") linked = cardMap[t.cardId] || "";
+        else if (t.mode === "Debit Card" || t.mode === "UPI") linked = bankMap[t.bankAccountId] || "";
+        rows.push([t.date, "Expense", t.category, t.expenseType || "Everyday", t.mode || "", linked, u.formatPlain(t.amount), t.note || ""]);
+      } else {
+        rows.push([t.date, "Income", t.category, "", "", "", u.formatPlain(t.amount), t.note || ""]);
+      }
+    });
+    return rows.map(function (r) { return r.map(csvField).join(","); }).join("\r\n");
+  }
+
+  function exportToExcel() {
+    Promise.all([
+      App.db.getAllTransactions(),
+      App.db.getAllBankAccounts(),
+      App.db.getAllCreditCards(),
+    ]).then(function (r) {
+      var txs = r[0].slice().sort(function (a, b) {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        return a.createdAt < b.createdAt ? -1 : 1;
+      });
+      var bankMap = {}, cardMap = {};
+      r[1].forEach(function (a) { bankMap[a.id] = a.bankName; });
+      r[2].forEach(function (c) { cardMap[c.id] = c.bankName; });
+
+      var csv = buildCsv(txs, bankMap, cardMap);
+      var blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "budgeit-export-" + u.todayISO() + ".csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
   }
 
   return {

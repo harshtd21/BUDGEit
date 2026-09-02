@@ -1,4 +1,4 @@
-# Budget
+# BUDGEit
 
 A personal budgeting and expense tracker — plain HTML/CSS/JS, installed as a home-screen app on iPhone. All data stays on your device in IndexedDB; there is no backend, no analytics, and no third-party network calls.
 
